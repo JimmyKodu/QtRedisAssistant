@@ -41,7 +41,7 @@ if [ -n "$Qt6_DIR" ]; then
     QT_BIN_DIR=""
     for rel_path in "../../../bin" "../../bin" "../../../../bin"; do
         TEST_DIR="$Qt6_DIR/$rel_path"
-        if [ -d "$TEST_DIR" ] && [ -f "$TEST_DIR/qmake" -o -f "$TEST_DIR/qmake.exe" ]; then
+        if [ -d "$TEST_DIR" ] && { [ -f "$TEST_DIR/qmake" ] || [ -f "$TEST_DIR/qmake.exe" ]; }; then
             QT_BIN_DIR="$TEST_DIR"
             break
         fi
@@ -102,8 +102,9 @@ for dll in "${MINGW_DLLS[@]}"; do
     if [ "$FOUND" = false ]; then
         echo "  ⚠ Warning: $dll not found in Qt bin directory"
         # Search in common paths
-        for search_path in "/mingw64/bin" "$(dirname "$(which gcc)" 2>/dev/null)"; do
-            if [ -n "$search_path" ] && [ -f "$search_path/$dll" ]; then
+        GCC_BIN_DIR=$(dirname "$(which gcc)" 2>/dev/null)
+        for search_path in "/mingw64/bin" "$GCC_BIN_DIR"; do
+            if [ -n "$search_path" ] && [ -d "$search_path" ] && [ -f "$search_path/$dll" ]; then
                 cp "$search_path/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll from $search_path" && FOUND=true
                 break
             fi
@@ -111,7 +112,8 @@ for dll in "${MINGW_DLLS[@]}"; do
     fi
     
     # Also search for Qt Tools mingw directory (only if not found yet)
-    if [ "$FOUND" = false ]; then
+    # This path is specific to Windows Qt installation
+    if [ "$FOUND" = false ] && [ -d "/c/Qt/Tools" ]; then
         for mingw_dir in /c/Qt/Tools/mingw*/bin; do
             if [ -d "$mingw_dir" ] && [ -f "$mingw_dir/$dll" ]; then
                 cp "$mingw_dir/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll from $mingw_dir" && FOUND=true
