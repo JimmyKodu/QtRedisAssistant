@@ -32,6 +32,7 @@ ui_*.h
 QtRedisAssistant
 !releases/**/QtRedisAssistant
 !releases/**/QtRedisAssistant.exe
+!releases/**/*.dll
 
 # IDE files
 .vscode/
