@@ -24,14 +24,17 @@ mkdir -p "$OUTPUT_DIR"
 cp "$EXE_PATH" "$OUTPUT_DIR/"
 EXE_NAME=$(basename "$EXE_PATH")
 
-# Copy qt.conf if it exists (to configure Qt plugin paths)
+# Copy qt.conf (critical configuration file for Qt plugin paths)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "$SCRIPT_DIR/qt.conf" ]; then
     echo "Copying qt.conf..."
     cp "$SCRIPT_DIR/qt.conf" "$OUTPUT_DIR/"
     echo "  ✓ Copied qt.conf"
 else
-    echo "  ✗ Error: qt.conf not found, this is a critical configuration file"
+    echo "  ✗ Error: qt.conf not found at $SCRIPT_DIR/qt.conf"
+    echo "         This is a critical configuration file required for Qt to find plugins."
+    echo "         Deployment cannot continue without it."
+    exit 1
 fi
 
 # Try to run windeployqt
