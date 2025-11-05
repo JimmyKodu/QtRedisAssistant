@@ -136,35 +136,44 @@ jobs:
       run: |
         VERSION=${{ steps.version.outputs.VERSION }}
         mkdir -p "releases/v${VERSION}/windows"
-        cp build/QtRedisAssistant.exe "releases/v${VERSION}/windows/"
         
-        # Copy Qt DLLs
-        # Note: windeployqt may fail in CI environment, but the executable will still work
-        # if Qt libraries are installed on the target system
-        if ! windeployqt --release --no-translations "releases/v${VERSION}/windows/QtRedisAssistant.exe"; then
-          echo "Warning: windeployqt failed, executable may need Qt runtime on target system"
-        fi
+        # Make deployment script executable
+        chmod +x deploy_windows.sh
+        
+        # Run deployment script to copy all dependencies
+        ./deploy_windows.sh build/QtRedisAssistant.exe "releases/v${VERSION}/windows"
         
         # Create README
         cat > "releases/v${VERSION}/windows/README.txt" << EOF
-        Qt Redis Assistant v${VERSION} - Windows Build
-        ===============================================
+        Qt Redis Assistant v${VERSION} - Windows Build (Self-Contained)
+        ================================================================
         
         Built on: $(date)
         Platform: Windows (Server 2022)
         Qt Version: 6.5.3
+        Compiler: MinGW
+        
+        This is a self-contained release that includes all required dependencies:
+        - Qt6 runtime libraries (Qt6Core.dll, Qt6Gui.dll, Qt6Widgets.dll, Qt6Network.dll)
+        - MinGW runtime libraries (libgcc_s_seh-1.dll, libstdc++-6.dll, libwinpthread-1.dll)
+        - Qt platform plugins (platforms/qwindows.dll)
         
         To run:
-        Double-click QtRedisAssistant.exe
+        1. Double-click QtRedisAssistant.exe
         
-        or from command line:
-        QtRedisAssistant.exe
+        Or from command line:
+        2. QtRedisAssistant.exe
         
-        All required Qt DLLs are included in this directory.
+        No additional Qt or MinGW installation is required on the target system.
+        All necessary DLLs are included in this directory.
         EOF
         
         # Show files
+        echo "Files in Windows release directory:"
         ls -lh "releases/v${VERSION}/windows/"
+        echo ""
+        echo "Platform plugins:"
+        ls -lh "releases/v${VERSION}/windows/platforms/" || echo "No platform plugins directory"
     
     - name: Upload Windows artifact
       uses: actions/upload-artifact@v4

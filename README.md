@@ -22,12 +22,12 @@ Each commit automatically builds executable files for both Windows and Linux pla
 ### 下载 (Downloads)
 
 构建产物会自动上传到GitHub Actions artifacts中：
-- Windows版本: `QtRedisAssistant-Windows-v{version}`
+- Windows版本: `QtRedisAssistant-Windows-v{version}` - **自包含版本，包含所有运行时依赖**
 - Linux版本: `QtRedisAssistant-Linux-v{version}`
 - 完整版本: `QtRedisAssistant-All-Platforms-v{version}`
 
 Build artifacts are automatically uploaded to GitHub Actions:
-- Windows build: `QtRedisAssistant-Windows-v{version}`
+- Windows build: `QtRedisAssistant-Windows-v{version}` - **Self-contained with all runtime dependencies**
 - Linux build: `QtRedisAssistant-Linux-v{version}`
 - Combined build: `QtRedisAssistant-All-Platforms-v{version}`
 
