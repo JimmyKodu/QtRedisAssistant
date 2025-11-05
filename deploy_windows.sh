@@ -63,6 +63,14 @@ fi
 if [ -n "$QT_BIN_DIR" ]; then
     QT_BIN_DIR=$(cd "$QT_BIN_DIR" && pwd)
     echo "Qt bin directory: $QT_BIN_DIR"
+else
+    echo "Warning: Qt bin directory not found. Will attempt to find DLLs in alternative locations."
+fi
+
+# Exit early if we can't find Qt and basic tools
+if [ -z "$QT_BIN_DIR" ] && ! command -v windeployqt &> /dev/null; then
+    echo "Error: Cannot find Qt installation and windeployqt is not available."
+    echo "Deployment may be incomplete. Please ensure Qt is installed and accessible."
 fi
 
 # List of MinGW runtime DLLs that need to be copied
@@ -83,12 +91,16 @@ QT_DLLS=(
 # Copy MinGW runtime DLLs
 echo "Copying MinGW runtime DLLs..."
 for dll in "${MINGW_DLLS[@]}"; do
-    if [ -f "$QT_BIN_DIR/$dll" ]; then
-        cp "$QT_BIN_DIR/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll"
-    else
-        echo "  ⚠ Warning: $dll not found in $QT_BIN_DIR"
-        # Try to find it in common MinGW locations
-        FOUND=false
+    FOUND=false
+    
+    # Try Qt bin directory first if available
+    if [ -n "$QT_BIN_DIR" ] && [ -f "$QT_BIN_DIR/$dll" ]; then
+        cp "$QT_BIN_DIR/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll" && FOUND=true
+    fi
+    
+    # If not found, try common MinGW locations
+    if [ "$FOUND" = false ]; then
+        echo "  ⚠ Warning: $dll not found in Qt bin directory"
         # Search in common paths
         for search_path in "/mingw64/bin" "$(dirname "$(which gcc)" 2>/dev/null)"; do
             if [ -n "$search_path" ] && [ -f "$search_path/$dll" ]; then
@@ -96,41 +108,51 @@ for dll in "${MINGW_DLLS[@]}"; do
                 break
             fi
         done
-        # Also search for Qt Tools mingw directory
-        if [ "$FOUND" = false ]; then
-            for mingw_dir in /c/Qt/Tools/mingw*/bin; do
-                if [ -d "$mingw_dir" ] && [ -f "$mingw_dir/$dll" ]; then
-                    cp "$mingw_dir/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll from $mingw_dir" && FOUND=true
-                    break
-                fi
-            done
-        fi
-        if [ "$FOUND" = false ]; then
-            echo "  ✗ Error: Could not find $dll in any known location"
-        fi
+    fi
+    
+    # Also search for Qt Tools mingw directory (only if not found yet)
+    if [ "$FOUND" = false ]; then
+        for mingw_dir in /c/Qt/Tools/mingw*/bin; do
+            if [ -d "$mingw_dir" ] && [ -f "$mingw_dir/$dll" ]; then
+                cp "$mingw_dir/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll from $mingw_dir" && FOUND=true
+                break
+            fi
+        done
+    fi
+    
+    if [ "$FOUND" = false ]; then
+        echo "  ✗ Error: Could not find $dll in any known location"
     fi
 done
 
 # Verify Qt DLLs are present (windeployqt should have copied them)
 echo "Verifying Qt DLLs..."
-for dll in "${QT_DLLS[@]}"; do
-    if [ -f "$OUTPUT_DIR/$dll" ]; then
-        echo "  ✓ $dll present"
-    else
-        echo "  ⚠ Warning: $dll not found, attempting to copy..."
-        if [ -f "$QT_BIN_DIR/$dll" ]; then
-            cp "$QT_BIN_DIR/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll"
+if [ -n "$QT_BIN_DIR" ]; then
+    for dll in "${QT_DLLS[@]}"; do
+        if [ -f "$OUTPUT_DIR/$dll" ]; then
+            echo "  ✓ $dll present"
         else
-            echo "  ✗ Error: $dll not found in $QT_BIN_DIR"
+            echo "  ⚠ Warning: $dll not found, attempting to copy..."
+            if [ -f "$QT_BIN_DIR/$dll" ]; then
+                cp "$QT_BIN_DIR/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll"
+            else
+                echo "  ✗ Error: $dll not found in $QT_BIN_DIR"
+            fi
         fi
-    fi
-done
+    done
+else
+    echo "  ⚠ Warning: Qt bin directory not available, skipping Qt DLL verification"
+fi
 
 # Copy Qt platform plugins if not already present
-if [ ! -d "$OUTPUT_DIR/platforms" ] && [ -d "$QT_BIN_DIR/../plugins/platforms" ]; then
+if [ ! -d "$OUTPUT_DIR/platforms" ] && [ -n "$QT_BIN_DIR" ] && [ -d "$QT_BIN_DIR/../plugins/platforms" ]; then
     echo "Copying Qt platform plugins..."
     mkdir -p "$OUTPUT_DIR/platforms"
     cp "$QT_BIN_DIR/../plugins/platforms/qwindows.dll" "$OUTPUT_DIR/platforms/" && echo "  ✓ Copied qwindows.dll"
+elif [ -d "$OUTPUT_DIR/platforms" ]; then
+    echo "  ✓ Platform plugins already present"
+else
+    echo "  ⚠ Warning: Could not find Qt platform plugins directory"
 fi
 
 # List all DLLs in output directory

@@ -70,7 +70,6 @@ if(WIN32)
     # Install Qt runtime dependencies
     if(WINDEPLOYQT_EXECUTABLE)
         install(CODE "
-            set(WINDEPLOYQT_RESULT 1)
             execute_process(
                 COMMAND \"${WINDEPLOYQT_EXECUTABLE}\" --release --no-translations --no-system-d3d-compiler --no-opengl-sw \"\${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}.exe\"
                 WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}/bin\"
