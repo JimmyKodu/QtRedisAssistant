@@ -24,6 +24,16 @@ mkdir -p "$OUTPUT_DIR"
 cp "$EXE_PATH" "$OUTPUT_DIR/"
 EXE_NAME=$(basename "$EXE_PATH")
 
+# Copy qt.conf if it exists (to configure Qt plugin paths)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/qt.conf" ]; then
+    echo "Copying qt.conf..."
+    cp "$SCRIPT_DIR/qt.conf" "$OUTPUT_DIR/"
+    echo "  ✓ Copied qt.conf"
+else
+    echo "  ⚠ Warning: qt.conf not found, Qt may not find plugins correctly"
+fi
+
 # Try to run windeployqt
 if command -v windeployqt &> /dev/null; then
     echo "Running windeployqt..."
@@ -161,6 +171,57 @@ elif [ -d "$OUTPUT_DIR/platforms" ]; then
     echo "  ✓ Platform plugins already present"
 else
     echo "  ⚠ Warning: Could not find Qt platform plugins directory"
+fi
+
+# Final verification - check that all essential DLLs are present
+echo ""
+echo "=== Final Verification ==="
+MISSING_DLLS=()
+CRITICAL_DLLS=(
+    "Qt6Core.dll"
+    "Qt6Gui.dll"
+    "Qt6Widgets.dll"
+    "Qt6Network.dll"
+    "libgcc_s_seh-1.dll"
+    "libstdc++-6.dll"
+    "libwinpthread-1.dll"
+)
+
+for dll in "${CRITICAL_DLLS[@]}"; do
+    if [ -f "$OUTPUT_DIR/$dll" ]; then
+        echo "  ✓ $dll present"
+    else
+        echo "  ✗ MISSING: $dll"
+        MISSING_DLLS+=("$dll")
+    fi
+done
+
+# Check platform plugin
+if [ -f "$OUTPUT_DIR/platforms/qwindows.dll" ]; then
+    echo "  ✓ platforms/qwindows.dll present"
+else
+    echo "  ✗ MISSING: platforms/qwindows.dll"
+    MISSING_DLLS+=("platforms/qwindows.dll")
+fi
+
+# Check qt.conf
+if [ -f "$OUTPUT_DIR/qt.conf" ]; then
+    echo "  ✓ qt.conf present"
+else
+    echo "  ⚠ WARNING: qt.conf missing (Qt may not find plugins)"
+fi
+
+if [ ${#MISSING_DLLS[@]} -gt 0 ]; then
+    echo ""
+    echo "⚠⚠⚠ WARNING: Some critical DLLs are missing! ⚠⚠⚠"
+    echo "The following files could not be found:"
+    for dll in "${MISSING_DLLS[@]}"; do
+        echo "  - $dll"
+    done
+    echo ""
+    echo "The application may not run correctly without these files."
+    echo "DO NOT copy DLLs from other applications (like Wireshark)!"
+    echo "This will cause ABI incompatibility and entry point errors."
 fi
 
 # List all DLLs in output directory

@@ -145,28 +145,61 @@ jobs:
         
         # Create README
         cat > "releases/v${VERSION}/windows/README.txt" << EOF
-        Qt Redis Assistant v${VERSION} - Windows Build (Self-Contained)
-        ================================================================
-        
-        Built on: $(date)
-        Platform: Windows (Server 2022)
-        Qt Version: 6.5.3
-        Compiler: MinGW
-        
-        This is a self-contained release that includes all required dependencies:
-        - Qt6 runtime libraries (Qt6Core.dll, Qt6Gui.dll, Qt6Widgets.dll, Qt6Network.dll)
-        - MinGW runtime libraries (libgcc_s_seh-1.dll, libstdc++-6.dll, libwinpthread-1.dll)
-        - Qt platform plugins (platforms/qwindows.dll)
-        
-        To run:
-        1. Double-click QtRedisAssistant.exe
-        
-        Or from command line:
-        2. QtRedisAssistant.exe
-        
-        No additional Qt or MinGW installation is required on the target system.
-        All necessary DLLs are included in this directory.
-        EOF
+Qt Redis Assistant v${VERSION} - Windows Build (Self-Contained)
+================================================================
+
+Built on: $(date)
+Platform: Windows (Server 2022)
+Qt Version: 6.5.3
+Compiler: MinGW
+
+This is a self-contained release that includes all required dependencies:
+- Qt6 runtime libraries (Qt6Core.dll, Qt6Gui.dll, Qt6Widgets.dll, Qt6Network.dll)
+- MinGW runtime libraries (libgcc_s_seh-1.dll, libstdc++-6.dll, libwinpthread-1.dll)
+- Qt platform plugins (platforms/qwindows.dll)
+- Qt configuration file (qt.conf)
+
+To run:
+1. Double-click QtRedisAssistant.exe
+
+Or from command line:
+2. QtRedisAssistant.exe
+
+No additional Qt or MinGW installation is required on the target system.
+All necessary DLLs are included in this directory.
+
+================================================================================
+⚠️  IMPORTANT WARNING - 重要警告  ⚠️
+================================================================================
+
+DO NOT copy DLL files from other applications (such as Wireshark, Notepad++, or 
+other Qt applications) to fix missing DLL errors!
+
+绝对不要从其他应用程序（如 Wireshark、Notepad++ 或其他 Qt 应用）复制 DLL 文件
+来修复缺少 DLL 的错误！
+
+Different applications use different Qt versions and compilers. Mixing DLLs 
+will cause errors like:
+- "Unable to locate program entry point _Z9qBadAllocv"
+- Random crashes and undefined behavior
+
+不同的应用程序使用不同的 Qt 版本和编译器。混合使用 DLL 会导致错误，例如：
+- "无法定位程序输入点 _Z9qBadAllocv"
+- 随机崩溃和未定义行为
+
+If you see missing DLL errors, re-download this complete package from GitHub 
+Actions or build from source using the correct Qt version.
+
+如果您看到缺少 DLL 的错误，请从 GitHub Actions 重新下载完整包，或使用正确的 
+Qt 版本从源代码构建。
+
+For detailed instructions, see:
+https://github.com/JimmyKodu/QtRedisAssistant/blob/main/README_WINDOWS.md
+
+详细说明请参阅：
+https://github.com/JimmyKodu/QtRedisAssistant/blob/main/README_WINDOWS.md
+================================================================================
+EOF
         
         # Show files
         echo "Files in Windows release directory:"
