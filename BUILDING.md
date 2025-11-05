@@ -32,7 +32,8 @@ The GitHub Actions workflow automatically triggers when:
    - 运行环境: Windows Server 2022
    - Qt版本: 6.5.3
    - 编译器: MinGW
-   - 产物: Windows可执行文件 (.exe) 及依赖DLL
+   - 产物: Windows可执行文件 (.exe) 及所有依赖DLL
+   - 自包含发布: 包含所有Qt运行库和MinGW运行时库
 
 3. **create-release-structure** - 发布结构创建
    - 合并两个平台的构建产物
@@ -51,7 +52,8 @@ The workflow contains three main jobs:
    - Environment: Windows Server 2022
    - Qt Version: 6.5.3
    - Compiler: MinGW
-   - Artifacts: Windows executable (.exe) with dependencies
+   - Artifacts: Windows executable (.exe) with all dependencies
+   - Self-contained release: Includes all Qt runtime and MinGW runtime libraries
 
 3. **create-release-structure** - Release structure creation
    - Combines artifacts from both platforms
@@ -71,9 +73,59 @@ releases/
     │   └── README.txt             # 说明文件
     ├── windows/
     │   ├── QtRedisAssistant.exe   # Windows可执行文件
-    │   ├── *.dll                  # Qt依赖库
+    │   ├── Qt6Core.dll            # Qt核心库
+    │   ├── Qt6Gui.dll             # Qt GUI库
+    │   ├── Qt6Widgets.dll         # Qt Widgets库
+    │   ├── Qt6Network.dll         # Qt网络库
+    │   ├── libgcc_s_seh-1.dll     # MinGW运行时库
+    │   ├── libstdc++-6.dll        # C++标准库
+    │   ├── libwinpthread-1.dll    # pthread库
+    │   ├── platforms/             # Qt平台插件
+    │   │   └── qwindows.dll       # Windows平台插件
     │   └── README.txt             # 说明文件
     └── BUILD_INFO.txt             # 构建信息
+```
+
+## 自包含发布 (Self-Contained Release)
+
+### Windows版本 (Windows Build)
+
+Windows版本采用自包含发布方式，**无需在目标系统安装Qt或MinGW环境**。所有必需的依赖都已包含在发布包中：
+
+- **Qt运行时库**: Qt6Core.dll, Qt6Gui.dll, Qt6Widgets.dll, Qt6Network.dll
+- **MinGW运行时库**: libgcc_s_seh-1.dll, libstdc++-6.dll, libwinpthread-1.dll
+- **Qt平台插件**: platforms/qwindows.dll
+
+只需解压发布包，直接运行QtRedisAssistant.exe即可使用。
+
+The Windows build uses a self-contained release approach, **no Qt or MinGW installation required on target system**. All necessary dependencies are included in the release package:
+
+- **Qt Runtime Libraries**: Qt6Core.dll, Qt6Gui.dll, Qt6Widgets.dll, Qt6Network.dll
+- **MinGW Runtime Libraries**: libgcc_s_seh-1.dll, libstdc++-6.dll, libwinpthread-1.dll
+- **Qt Platform Plugins**: platforms/qwindows.dll
+
+Simply extract the release package and run QtRedisAssistant.exe directly.
+
+### Linux版本 (Linux Build)
+
+Linux版本需要在目标系统安装Qt6运行时库。可以通过系统包管理器安装：
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install qt6-base-dev
+
+# Fedora
+sudo dnf install qt6-qtbase-devel
+```
+
+The Linux build requires Qt6 runtime libraries to be installed on the target system. Install via system package manager:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install qt6-base-dev
+
+# Fedora
+sudo dnf install qt6-qtbase-devel
 ```
 
 ## 下载构建产物 (Download Build Artifacts)
