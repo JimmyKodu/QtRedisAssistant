@@ -69,8 +69,9 @@ fi
 
 # Exit early if we can't find Qt and basic tools
 if [ -z "$QT_BIN_DIR" ] && ! command -v windeployqt &> /dev/null; then
-    echo "Error: Cannot find Qt installation and windeployqt is not available."
-    echo "Deployment may be incomplete. Please ensure Qt is installed and accessible."
+    echo "Warning: Cannot find Qt installation and windeployqt is not available."
+    echo "Deployment may be incomplete. Will attempt to find DLLs in alternative locations."
+    # Don't exit - try to continue with alternative search paths
 fi
 
 # List of MinGW runtime DLLs that need to be copied
@@ -102,7 +103,12 @@ for dll in "${MINGW_DLLS[@]}"; do
     if [ "$FOUND" = false ]; then
         echo "  ⚠ Warning: $dll not found in Qt bin directory"
         # Search in common paths
-        GCC_BIN_DIR=$(dirname "$(which gcc)" 2>/dev/null)
+        GCC_PATH=$(which gcc 2>/dev/null)
+        GCC_BIN_DIR=""
+        if [ -n "$GCC_PATH" ]; then
+            GCC_BIN_DIR=$(dirname "$GCC_PATH")
+        fi
+        
         for search_path in "/mingw64/bin" "$GCC_BIN_DIR"; do
             if [ -n "$search_path" ] && [ -d "$search_path" ] && [ -f "$search_path/$dll" ]; then
                 cp "$search_path/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll from $search_path" && FOUND=true
