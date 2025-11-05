@@ -70,11 +70,20 @@ if(WIN32)
     # Install Qt runtime dependencies
     if(WINDEPLOYQT_EXECUTABLE)
         install(CODE "
+            set(WINDEPLOYQT_RESULT 1)
             execute_process(
                 COMMAND \"${WINDEPLOYQT_EXECUTABLE}\" --release --no-translations --no-system-d3d-compiler --no-opengl-sw \"\${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}.exe\"
                 WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}/bin\"
+                RESULT_VARIABLE WINDEPLOYQT_RESULT
+                OUTPUT_VARIABLE WINDEPLOYQT_OUTPUT
+                ERROR_VARIABLE WINDEPLOYQT_ERROR
             )
+            if(NOT WINDEPLOYQT_RESULT EQUAL 0)
+                message(WARNING \"windeployqt failed with exit code \${WINDEPLOYQT_RESULT}. Output: \${WINDEPLOYQT_OUTPUT} Error: \${WINDEPLOYQT_ERROR}\")
+            endif()
         ")
+    else()
+        message(WARNING "windeployqt not found. Qt runtime dependencies may need to be copied manually.")
     endif()
     
     # Install MinGW runtime DLLs

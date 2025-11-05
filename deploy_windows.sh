@@ -37,10 +37,17 @@ fi
 # Find Qt bin directory
 if [ -n "$Qt6_DIR" ]; then
     # Try to resolve Qt bin directory from Qt6_DIR more robustly
-    QT_BIN_DIR="$Qt6_DIR/../../../bin"
-    if [ ! -d "$QT_BIN_DIR" ]; then
-        # Alternative path structure
-        QT_BIN_DIR="$Qt6_DIR/../../bin"
+    # Common patterns: Qt6_DIR/lib/cmake/Qt6 -> need to go up 3 levels then down to bin
+    QT_BIN_DIR=""
+    for rel_path in "../../../bin" "../../bin" "../../../../bin"; do
+        TEST_DIR="$Qt6_DIR/$rel_path"
+        if [ -d "$TEST_DIR" ] && [ -f "$TEST_DIR/qmake" -o -f "$TEST_DIR/qmake.exe" ]; then
+            QT_BIN_DIR="$TEST_DIR"
+            break
+        fi
+    done
+    if [ -z "$QT_BIN_DIR" ]; then
+        echo "Warning: Could not find Qt bin directory from Qt6_DIR=$Qt6_DIR"
     fi
 elif [ -n "$QTDIR" ]; then
     QT_BIN_DIR="$QTDIR/bin"
@@ -82,12 +89,22 @@ for dll in "${MINGW_DLLS[@]}"; do
         echo "  ⚠ Warning: $dll not found in $QT_BIN_DIR"
         # Try to find it in common MinGW locations
         FOUND=false
-        for search_path in "/mingw64/bin" "/c/Qt/Tools/mingw*/bin" "$(dirname $(which gcc 2>/dev/null) 2>/dev/null)"; do
-            if [ -f "$search_path/$dll" ]; then
+        # Search in common paths
+        for search_path in "/mingw64/bin" "$(dirname "$(which gcc)" 2>/dev/null)"; do
+            if [ -n "$search_path" ] && [ -f "$search_path/$dll" ]; then
                 cp "$search_path/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll from $search_path" && FOUND=true
                 break
             fi
         done
+        # Also search for Qt Tools mingw directory
+        if [ "$FOUND" = false ]; then
+            for mingw_dir in /c/Qt/Tools/mingw*/bin; do
+                if [ -d "$mingw_dir" ] && [ -f "$mingw_dir/$dll" ]; then
+                    cp "$mingw_dir/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll from $mingw_dir" && FOUND=true
+                    break
+                fi
+            done
+        fi
         if [ "$FOUND" = false ]; then
             echo "  ✗ Error: Could not find $dll in any known location"
         fi
