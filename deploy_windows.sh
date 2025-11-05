@@ -204,11 +204,12 @@ else
     MISSING_DLLS+=("platforms/qwindows.dll")
 fi
 
-# Check qt.conf
+# Check qt.conf (critical for Qt plugin discovery)
 if [ -f "$OUTPUT_DIR/qt.conf" ]; then
     echo "  ✓ qt.conf present"
 else
-    echo "  ⚠ WARNING: qt.conf missing (Qt may not find plugins)"
+    echo "  ✗ MISSING: qt.conf"
+    MISSING_DLLS+=("qt.conf")
 fi
 
 if [ ${#MISSING_DLLS[@]} -gt 0 ]; then

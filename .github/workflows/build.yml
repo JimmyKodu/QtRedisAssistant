@@ -194,10 +194,10 @@ Actions or build from source using the correct Qt version.
 Qt 版本从源代码构建。
 
 For detailed instructions, see:
-https://github.com/JimmyKodu/QtRedisAssistant/blob/main/README_WINDOWS.md
+https://github.com/${{ github.repository }}/blob/main/README_WINDOWS.md
 
 详细说明请参阅：
-https://github.com/JimmyKodu/QtRedisAssistant/blob/main/README_WINDOWS.md
+https://github.com/${{ github.repository }}/blob/main/README_WINDOWS.md
 ================================================================================
 EOF
         

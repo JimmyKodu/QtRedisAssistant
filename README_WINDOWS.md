@@ -70,10 +70,13 @@ If you want to build from source, follow these steps:
    
    - 选择 "Qt Online Installer"
      Choose "Qt Online Installer"
-   - 安装时选择 "MinGW 9.0 64-bit" 组件
-     During installation, select "MinGW 9.0 64-bit" component
+   - 安装时选择 "MinGW 9.0 64-bit" 组件（或更新版本的 MinGW，取决于您的 Qt 版本）
+     During installation, select "MinGW 9.0 64-bit" component (or a newer MinGW version that comes with your Qt version)
    - 确保选择 Qt 6.5.x 版本
      Make sure to select Qt 6.5.x version
+   
+   **注意：** MinGW 版本应与您的 Qt 安装捆绑的版本匹配。如果使用更新的 Qt 版本，请选择相应的 MinGW 工具链。
+   **Note:** The MinGW version should match the one bundled with your Qt installation. If using a newer Qt version, select the corresponding MinGW toolchain.
 
 2. **安装 CMake 3.16 或更高版本**
    **Install CMake 3.16 or higher**
