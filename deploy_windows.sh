@@ -217,15 +217,18 @@ fi
 
 if [ ${#MISSING_FILES[@]} -gt 0 ]; then
     echo ""
-    echo "⚠⚠⚠ WARNING: Some critical files are missing! ⚠⚠⚠"
+    echo "⚠⚠⚠ ERROR: Some critical files are missing! ⚠⚠⚠"
     echo "The following files could not be found:"
     for file in "${MISSING_FILES[@]}"; do
         echo "  - $file"
     done
     echo ""
-    echo "The application may not run correctly without these files."
+    echo "The application will not run correctly without these files."
     echo "DO NOT copy DLLs from other applications (like Wireshark)!"
     echo "This will cause ABI incompatibility and entry point errors."
+    echo ""
+    echo "Deployment FAILED. Please ensure all required files are available."
+    exit 1
 fi
 
 # List all DLLs in output directory

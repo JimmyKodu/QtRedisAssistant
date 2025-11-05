@@ -99,19 +99,23 @@ jobs:
     permissions:
       contents: read
     
+    env:
+      QT_VERSION: '6.5.3'
+      MINGW_TOOLS: 'tools_mingw90'
+    
     steps:
     - uses: actions/checkout@v4
     
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '6.5.3'
+        version: ${{ env.QT_VERSION }}
         host: 'windows'
         target: 'desktop'
         arch: 'win64_mingw'
         modules: 'qtnetworkauth'
         cache: true
-        tools: 'tools_mingw90'
+        tools: ${{ env.MINGW_TOOLS }}
     
     - name: Build
       run: |
@@ -150,8 +154,8 @@ Qt Redis Assistant v${VERSION} - Windows Build (Self-Contained)
 
 Built on: $(date)
 Platform: Windows (Server 2022)
-Qt Version: 6.5.3
-Compiler: MinGW
+Qt Version: ${{ env.QT_VERSION }}
+Compiler: MinGW (from ${{ env.MINGW_TOOLS }})
 
 This is a self-contained release that includes all required dependencies:
 - Qt6 runtime libraries (Qt6Core.dll, Qt6Gui.dll, Qt6Widgets.dll, Qt6Network.dll)
