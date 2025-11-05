@@ -31,7 +31,7 @@ if [ -f "$SCRIPT_DIR/qt.conf" ]; then
     cp "$SCRIPT_DIR/qt.conf" "$OUTPUT_DIR/"
     echo "  ✓ Copied qt.conf"
 else
-    echo "  ⚠ Warning: qt.conf not found, Qt may not find plugins correctly"
+    echo "  ✗ Error: qt.conf not found, this is a critical configuration file"
 fi
 
 # Try to run windeployqt
@@ -173,10 +173,10 @@ else
     echo "  ⚠ Warning: Could not find Qt platform plugins directory"
 fi
 
-# Final verification - check that all essential DLLs are present
+# Final verification - check that all essential files are present
 echo ""
 echo "=== Final Verification ==="
-MISSING_DLLS=()
+MISSING_FILES=()
 CRITICAL_DLLS=(
     "Qt6Core.dll"
     "Qt6Gui.dll"
@@ -192,7 +192,7 @@ for dll in "${CRITICAL_DLLS[@]}"; do
         echo "  ✓ $dll present"
     else
         echo "  ✗ MISSING: $dll"
-        MISSING_DLLS+=("$dll")
+        MISSING_FILES+=("$dll")
     fi
 done
 
@@ -201,7 +201,7 @@ if [ -f "$OUTPUT_DIR/platforms/qwindows.dll" ]; then
     echo "  ✓ platforms/qwindows.dll present"
 else
     echo "  ✗ MISSING: platforms/qwindows.dll"
-    MISSING_DLLS+=("platforms/qwindows.dll")
+    MISSING_FILES+=("platforms/qwindows.dll")
 fi
 
 # Check qt.conf (critical for Qt plugin discovery)
@@ -209,15 +209,15 @@ if [ -f "$OUTPUT_DIR/qt.conf" ]; then
     echo "  ✓ qt.conf present"
 else
     echo "  ✗ MISSING: qt.conf"
-    MISSING_DLLS+=("qt.conf")
+    MISSING_FILES+=("qt.conf")
 fi
 
-if [ ${#MISSING_DLLS[@]} -gt 0 ]; then
+if [ ${#MISSING_FILES[@]} -gt 0 ]; then
     echo ""
-    echo "⚠⚠⚠ WARNING: Some critical DLLs are missing! ⚠⚠⚠"
+    echo "⚠⚠⚠ WARNING: Some critical files are missing! ⚠⚠⚠"
     echo "The following files could not be found:"
-    for dll in "${MISSING_DLLS[@]}"; do
-        echo "  - $dll"
+    for file in "${MISSING_FILES[@]}"; do
+        echo "  - $file"
     done
     echo ""
     echo "The application may not run correctly without these files."
