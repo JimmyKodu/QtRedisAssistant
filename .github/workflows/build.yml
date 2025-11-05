@@ -132,7 +132,11 @@ jobs:
         cp build/QtRedisAssistant.exe "releases/v${VERSION}/windows/"
         
         # Copy Qt DLLs
-        windeployqt --release --no-translations "releases/v${VERSION}/windows/QtRedisAssistant.exe" || true
+        # Note: windeployqt may fail in CI environment, but the executable will still work
+        # if Qt libraries are installed on the target system
+        if ! windeployqt --release --no-translations "releases/v${VERSION}/windows/QtRedisAssistant.exe"; then
+          echo "Warning: windeployqt failed, executable may need Qt runtime on target system"
+        fi
         
         # Create README
         cat > "releases/v${VERSION}/windows/README.txt" << EOF

@@ -79,6 +79,8 @@ QString RedisConnection::sendCommand(const QString &command)
     }
     
     // Format command in Redis protocol (RESP)
+    // Note: This simple implementation splits by space. For production use,
+    // consider implementing proper argument parsing to handle quoted strings.
     QStringList parts = command.split(' ', Qt::SkipEmptyParts);
     QString resp = QString("*%1\r\n").arg(parts.size());
     
@@ -120,7 +122,7 @@ QString RedisConnection::parseRedisResponse()
         case '$': // Bulk string
             {
                 int pos = content.indexOf("\r\n");
-                if (pos > 0) {
+                if (pos >= 0) {
                     content = content.mid(pos + 2);
                 }
                 return content;
