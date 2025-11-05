@@ -36,7 +36,12 @@ fi
 
 # Find Qt bin directory
 if [ -n "$Qt6_DIR" ]; then
+    # Try to resolve Qt bin directory from Qt6_DIR more robustly
     QT_BIN_DIR="$Qt6_DIR/../../../bin"
+    if [ ! -d "$QT_BIN_DIR" ]; then
+        # Alternative path structure
+        QT_BIN_DIR="$Qt6_DIR/../../bin"
+    fi
 elif [ -n "$QTDIR" ]; then
     QT_BIN_DIR="$QTDIR/bin"
 elif command -v qmake &> /dev/null; then
@@ -75,10 +80,16 @@ for dll in "${MINGW_DLLS[@]}"; do
         cp "$QT_BIN_DIR/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll"
     else
         echo "  ⚠ Warning: $dll not found in $QT_BIN_DIR"
-        # Try to find it in PATH
-        if command -v "$dll" &> /dev/null; then
-            DLL_PATH=$(command -v "$dll")
-            cp "$DLL_PATH" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll from PATH"
+        # Try to find it in common MinGW locations
+        FOUND=false
+        for search_path in "/mingw64/bin" "/c/Qt/Tools/mingw*/bin" "$(dirname $(which gcc 2>/dev/null) 2>/dev/null)"; do
+            if [ -f "$search_path/$dll" ]; then
+                cp "$search_path/$dll" "$OUTPUT_DIR/" && echo "  ✓ Copied $dll from $search_path" && FOUND=true
+                break
+            fi
+        done
+        if [ "$FOUND" = false ]; then
+            echo "  ✗ Error: Could not find $dll in any known location"
         fi
     fi
 done

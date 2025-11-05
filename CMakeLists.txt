@@ -85,9 +85,21 @@ if(WIN32)
         libwinpthread-1.dll
     )
     
+    set(MINGW_DLLS_FOUND 0)
+    set(MINGW_DLLS_MISSING "")
     foreach(dll ${MINGW_RUNTIME_DLLS})
         if(EXISTS "${_qt_bin_dir}/${dll}")
             install(FILES "${_qt_bin_dir}/${dll}" DESTINATION bin)
+            math(EXPR MINGW_DLLS_FOUND "${MINGW_DLLS_FOUND} + 1")
+        else()
+            list(APPEND MINGW_DLLS_MISSING "${dll}")
         endif()
     endforeach()
+    
+    # Warn if some MinGW DLLs are missing
+    list(LENGTH MINGW_RUNTIME_DLLS TOTAL_MINGW_DLLS)
+    if(NOT MINGW_DLLS_FOUND EQUAL TOTAL_MINGW_DLLS)
+        message(WARNING "Some MinGW runtime DLLs not found in ${_qt_bin_dir}: ${MINGW_DLLS_MISSING}. "
+                        "The deployment script will attempt to find them during packaging.")
+    endif()
 endif()
