@@ -24,6 +24,19 @@ mkdir -p "$OUTPUT_DIR"
 cp "$EXE_PATH" "$OUTPUT_DIR/"
 EXE_NAME=$(basename "$EXE_PATH")
 
+# Copy qt.conf (critical configuration file for Qt plugin paths)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/qt.conf" ]; then
+    echo "Copying qt.conf..."
+    cp "$SCRIPT_DIR/qt.conf" "$OUTPUT_DIR/"
+    echo "  ✓ Copied qt.conf"
+else
+    echo "  ✗ Error: qt.conf not found at $SCRIPT_DIR/qt.conf"
+    echo "         This is a critical configuration file required for Qt to find plugins."
+    echo "         Deployment cannot continue without it."
+    exit 1
+fi
+
 # Try to run windeployqt
 if command -v windeployqt &> /dev/null; then
     echo "Running windeployqt..."
@@ -161,6 +174,61 @@ elif [ -d "$OUTPUT_DIR/platforms" ]; then
     echo "  ✓ Platform plugins already present"
 else
     echo "  ⚠ Warning: Could not find Qt platform plugins directory"
+fi
+
+# Final verification - check that all essential files are present
+echo ""
+echo "=== Final Verification ==="
+MISSING_FILES=()
+CRITICAL_DLLS=(
+    "Qt6Core.dll"
+    "Qt6Gui.dll"
+    "Qt6Widgets.dll"
+    "Qt6Network.dll"
+    "libgcc_s_seh-1.dll"
+    "libstdc++-6.dll"
+    "libwinpthread-1.dll"
+)
+
+for dll in "${CRITICAL_DLLS[@]}"; do
+    if [ -f "$OUTPUT_DIR/$dll" ]; then
+        echo "  ✓ $dll present"
+    else
+        echo "  ✗ MISSING: $dll"
+        MISSING_FILES+=("$dll")
+    fi
+done
+
+# Check platform plugin
+if [ -f "$OUTPUT_DIR/platforms/qwindows.dll" ]; then
+    echo "  ✓ platforms/qwindows.dll present"
+else
+    echo "  ✗ MISSING: platforms/qwindows.dll"
+    MISSING_FILES+=("platforms/qwindows.dll")
+fi
+
+# Check qt.conf (critical for Qt plugin discovery)
+if [ -f "$OUTPUT_DIR/qt.conf" ]; then
+    echo "  ✓ qt.conf present"
+else
+    echo "  ✗ MISSING: qt.conf"
+    MISSING_FILES+=("qt.conf")
+fi
+
+if [ ${#MISSING_FILES[@]} -gt 0 ]; then
+    echo ""
+    echo "⚠⚠⚠ ERROR: Some critical files are missing! ⚠⚠⚠"
+    echo "The following files could not be found:"
+    for file in "${MISSING_FILES[@]}"; do
+        echo "  - $file"
+    done
+    echo ""
+    echo "The application will not run correctly without these files."
+    echo "DO NOT copy DLLs from other applications (like Wireshark)!"
+    echo "This will cause ABI incompatibility and entry point errors."
+    echo ""
+    echo "Deployment FAILED. Please ensure all required files are available."
+    exit 1
 fi
 
 # List all DLLs in output directory

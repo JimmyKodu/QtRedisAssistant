@@ -54,6 +54,11 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
 )
 
+# Install qt.conf for Windows to configure Qt plugin paths
+if(WIN32)
+    install(FILES qt.conf DESTINATION bin)
+endif()
+
 # Windows deployment - install Qt and MinGW runtime DLLs
 if(WIN32)
     # Find Qt installation path
